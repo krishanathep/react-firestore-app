@@ -3,8 +3,9 @@ import firebase from "../config/firebase";
 
 const useItems = () => {
   const [items, setItems] = useState([]);
+
   useEffect(() => {
-    firebase
+    const unsubscribe = firebase
       .firestore()
       .collection("items")
       .onSnapshot((snapshot) => {
@@ -14,15 +15,22 @@ const useItems = () => {
         }));
         setItems(listItems);
       });
+    return () => unsubscribe();
   }, []);
   return items;
 };
 
 const ItemList = () => {
-    const listItem = useItems();
+  const listItem = useItems();
+
+  const deleteStorage = (id) => {
+    firebase.firestore().collection("items").doc(id).delete();
+  };
+
   return (
     <div>
-      <table border="1" width='50%'>
+      <h3>List item</h3>
+      <table border="1" width="80%">
         <tbody>
           <tr>
             <th>Name</th>
@@ -32,15 +40,15 @@ const ItemList = () => {
             <th>Actions</th>
           </tr>
         </tbody>
-        {listItem.map(item=>(
-            <tbody>
+        {listItem.map((item) => (
+          <tbody key={item.id}>
             <td>{item.name}</td>
             <td>{item.type}</td>
             <td>{item.qty}</td>
             <td>{item.description}</td>
             <td>
               <button>Update</button>
-              <button>Delete</button>
+              <button onClick={()=>deleteStorage(item.id)}>Delete</button>
             </td>
           </tbody>
         ))}
